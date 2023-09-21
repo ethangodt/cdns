@@ -1,7 +1,5 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <arpa/inet.h>
 #include "dns.h"
 
 struct DNS_HEADER {
@@ -19,13 +17,13 @@ void makeQuery(char **buffer, size_t *querySize, char *domain) {
     header.id = htons(rand()); // Assign a random ID
     header.flags = htons(0x0100); // This is a query
     header.qdcount = htons(1); // One question
-    header.ancount = htons(0); // One question
-    header.nscount = htons(0); // One question
-    header.arcount = htons(0); // One question
+    header.ancount = htons(0);
+    header.nscount = htons(0);
+    header.arcount = htons(0);
 
     size_t qnameSize = strlen(domain) + 2; // one for the starting label size, one for the terminal 0
     char *token, *namep, *qname;
-    namep = qname = (char *) malloc(qnameSize); // +1 for the null terminator
+    namep = qname = (char *) malloc(qnameSize);
     while ((token = strsep(&domain, ".")) != NULL) {
         size_t len = strlen(token);
         *namep++ = len; // length of the label
