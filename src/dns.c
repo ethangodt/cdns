@@ -15,7 +15,7 @@ void makeQuery(char **buffer, size_t *querySize, char *domain) {
     struct DNS_HEADER header;
 
     header.id = htons(rand()); // Assign a random ID
-    header.flags = htons(0x0100); // This is a query
+    header.flags = htons(0x0120); // This is a query
     header.qdcount = htons(1); // One question
     header.ancount = htons(0);
     header.nscount = htons(0);
