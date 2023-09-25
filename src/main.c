@@ -5,23 +5,24 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include "dns.h"
+#include "cmd.h"
 
 int main(int argc, char *argv[]) {
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <DNS server> <domain>\n", argv[0]);
-        return 1;
-    }
-
+    struct CMD_INPUT input;
     int sockfd;
     struct addrinfo hints, *servinfo, *p;
     int rv;
     int numbytes;
 
+    if (parseInput(argc, argv, &input) != 0) {
+        return 1;
+    }
+
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
 
-    if ((rv = getaddrinfo(argv[1], "53", &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo(input.ip, "53", &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
@@ -41,7 +42,7 @@ int main(int argc, char *argv[]) {
 
     char *dns_query;
     size_t querySize;
-    makeQuery(&dns_query, &querySize, argv[2]);
+    makeQuery(&dns_query, &querySize, &input);
 
     if ((numbytes = sendto(sockfd, dns_query, querySize, 0, p->ai_addr, p->ai_addrlen)) == -1) {
         perror("sendto()");

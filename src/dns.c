@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "dns.h"
+#include "cmd.h"
 
 struct DNS_HEADER {
     unsigned short id;
@@ -11,7 +12,7 @@ struct DNS_HEADER {
     unsigned short arcount;
 };
 
-void makeQuery(char **buffer, size_t *querySize, char *domain) {
+void makeQuery(char **buffer, size_t *querySize, struct CMD_INPUT *input) {
     struct DNS_HEADER header;
 
     header.id = htons(rand()); // Assign a random ID
@@ -21,23 +22,26 @@ void makeQuery(char **buffer, size_t *querySize, char *domain) {
     header.nscount = htons(0);
     header.arcount = htons(0);
 
-    size_t qnameSize = strlen(domain) + 2; // one for the starting label size, one for the terminal 0
+    size_t qnameSize = strlen(input->domain) + 2; // one for the starting label size, one for the terminal 0
     char *token, *namep, *qname;
     namep = qname = (char *) malloc(qnameSize);
-    while ((token = strsep(&domain, ".")) != NULL) {
+    while ((token = strsep(&input->domain, ".")) != NULL) {
         size_t len = strlen(token);
         *namep++ = len; // length of the label
         memcpy(namep, token, len);
         namep += len;
     }
 
-    short qtype = htons(1); // Type A
+    short qtype = htons(1); // default to "A"
+    if (input->type == NS) {
+        qtype = htons(2);
+    }
     short qclass = htons(1); // Class IN
 
     // combine all pieces of query together on one buffer
     *querySize = sizeof(struct DNS_HEADER) + qnameSize + sizeof(qtype) + sizeof(qclass);
     char *qp, *query;
-    qp = query = (char *)calloc(*querySize, 1);
+    qp = query = (char *) calloc(*querySize, 1);
     memcpy(qp, &header, sizeof(struct DNS_HEADER));
     qp += sizeof(struct DNS_HEADER);
     memcpy(qp, qname, qnameSize);
