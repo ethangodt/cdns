@@ -7,6 +7,11 @@
 #include "dns.h"
 
 int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <DNS server> <domain>\n", argv[0]);
+        return 1;
+    }
+
     int sockfd;
     struct addrinfo hints, *servinfo, *p;
     int rv;
@@ -23,14 +28,14 @@ int main(int argc, char *argv[]) {
 
     for (p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            perror("talker: socket");
+            perror("socket()");
             continue;
         }
         break;
     }
 
     if (p == NULL) {
-        fprintf(stderr, "talker: failed to create socket\n");
+        fprintf(stderr, "failed to create socket\n");
         return 2;
     }
 
@@ -39,16 +44,17 @@ int main(int argc, char *argv[]) {
     makeQuery(&dns_query, &querySize, argv[2]);
 
     if ((numbytes = sendto(sockfd, dns_query, querySize, 0, p->ai_addr, p->ai_addrlen)) == -1) {
-        perror("talker: sendto");
-        exit(1);
+        perror("sendto()");
+        return 1;
     }
 
     freeaddrinfo(servinfo);
+    free(dns_query);
 
     unsigned char dns_response[1024];
     if ((numbytes = recvfrom(sockfd, dns_response, sizeof(dns_response), 0, NULL, NULL)) == -1) {
-        perror("talker: recvfrom");
-        exit(1);
+        perror("recvfrom()");
+        return 1;
     }
 
     printf("DNS Response (%d bytes):\n", numbytes);
@@ -58,8 +64,6 @@ int main(int argc, char *argv[]) {
             printf("\n");
         }
     }
-
-    // TODO parse response
 
     close(sockfd);
 

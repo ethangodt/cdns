@@ -31,8 +31,8 @@ void makeQuery(char **buffer, size_t *querySize, char *domain) {
         namep += len;
     }
 
-    short qtype = 1; // Type A
-    short qclass = 1; // Class IN
+    short qtype = htons(1); // Type A
+    short qclass = htons(1); // Class IN
 
     // combine all pieces of query together on one buffer
     *querySize = sizeof(struct DNS_HEADER) + qnameSize + sizeof(qtype) + sizeof(qclass);
